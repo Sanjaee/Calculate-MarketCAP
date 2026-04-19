@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, type ChangeEvent } from "react";
+import React, { useState, useCallback, useEffect, useMemo, type ChangeEvent } from "react";
 
 /** Asset di `public/SOL.svg` — URL root Next.js */
 const SOL_ICON = "/SOL.svg";
@@ -22,6 +22,17 @@ function parseMC(raw: string): number {
   if (s.endsWith("M")) return parseFloat(s) * 1_000_000;
   if (s.endsWith("K")) return parseFloat(s) * 1_000;
   return parseFloat(s);
+}
+
+/** Modal Masuk: sama seperti MC (K/M/B), plus strip $ / ◎ / koma. */
+function parseModalInput(raw: string): number {
+  const cleaned = raw
+    .trim()
+    .replace(/\$/g, "")
+    .replace(/◎/g, "")
+    .replace(/,/g, "")
+    .replace(/\s/g, "");
+  return parseMC(cleaned);
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
@@ -143,25 +154,38 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
   const [usdVal, setUsdVal] = useState("");
   const [lastEdited, setLastEdited] = useState<"sol" | "usd">("sol");
 
-  // Sync the other field whenever inputs or price changes
-  useEffect(() => {
-    if (solPrice <= 0) return;
-    if (lastEdited === "sol") {
-      const n = parseFloat(solVal);
-      setUsdVal(isNaN(n) ? "" : (n * solPrice).toFixed(2));
-    } else {
-      const n = parseFloat(usdVal);
-      setSolVal(isNaN(n) ? "" : (n / solPrice).toFixed(6));
-    }
-  }, [solVal, usdVal, solPrice, lastEdited]);
+  const derivedUsdFromSol = useMemo(() => {
+    if (solPrice <= 0 || !solVal) return "";
+    const n = parseFloat(solVal);
+    return isNaN(n) ? "" : (n * solPrice).toFixed(2);
+  }, [solVal, solPrice]);
 
-  const handleSol = (v: string) => { setLastEdited("sol"); setSolVal(v); };
-  const handleUsd = (v: string) => { setLastEdited("usd"); setUsdVal(v); };
+  const derivedSolFromUsd = useMemo(() => {
+    if (solPrice <= 0 || !usdVal) return "";
+    const n = parseFloat(usdVal);
+    return isNaN(n) ? "" : (n / solPrice).toFixed(6);
+  }, [usdVal, solPrice]);
+
+  const displaySol = lastEdited === "sol" ? solVal : derivedSolFromUsd;
+  const displayUsd = lastEdited === "usd" ? usdVal : derivedUsdFromSol;
+
+  const handleSol = (v: string) => {
+    setLastEdited("sol");
+    setSolVal(v);
+  };
+  const handleUsd = (v: string) => {
+    setLastEdited("usd");
+    setUsdVal(v);
+  };
 
   const swap = () => {
-    setLastEdited(lastEdited === "sol" ? "usd" : "sol");
-    setSolVal(usdVal ? (parseFloat(usdVal) / (solPrice || 1)).toFixed(6) : "");
-    setUsdVal(solVal ? (parseFloat(solVal) * (solPrice || 1)).toFixed(2) : "");
+    if (lastEdited === "sol") {
+      setUsdVal(derivedUsdFromSol);
+      setLastEdited("usd");
+    } else {
+      setSolVal(derivedSolFromUsd);
+      setLastEdited("sol");
+    }
   };
 
   return (
@@ -202,7 +226,7 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
               <input
                 type="number"
                 min="0"
-                value={solVal}
+                value={displaySol}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => handleSol(e.target.value)}
                 placeholder="0"
                 className="w-full bg-transparent font-mono text-base text-[#e2e8f0] placeholder-[#2a3a4a] focus:outline-none"
@@ -227,7 +251,7 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
               <input
                 type="number"
                 min="0"
-                value={usdVal}
+                value={displayUsd}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => handleUsd(e.target.value)}
                 placeholder="0.00"
                 className="w-full bg-transparent font-mono text-base text-[#e2e8f0] placeholder-[#2a3a4a] focus:outline-none"
@@ -250,14 +274,22 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
         </div>
 
         {/* Result summary */}
-        {solVal && usdVal && solPrice > 0 && (
+        {solPrice > 0 &&
+          displaySol &&
+          displayUsd &&
+          parseFloat(displaySol) >= 0 &&
+          parseFloat(displayUsd) >= 0 && (
           <div className="mt-3 bg-[#080e14] border border-[#1e2d3d] rounded px-3 py-2 flex items-center justify-between">
             <span className="text-[10px] font-mono text-[#3a5a7a]">
-              {parseFloat(solVal) >= 0 ? parseFloat(solVal).toLocaleString("en-US", { maximumFractionDigits: 6 }) : "0"} SOL
+              {parseFloat(displaySol).toLocaleString("en-US", { maximumFractionDigits: 6 })} SOL
             </span>
             <span className="text-[10px] font-mono text-[#3a4a5a]">=</span>
             <span className="text-[11px] font-mono font-bold text-[#4ade80]">
-              ${parseFloat(usdVal) >= 0 ? parseFloat(usdVal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+              $
+              {parseFloat(displayUsd).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </span>
           </div>
         )}
@@ -313,7 +345,7 @@ export default function PnlCalculator() {
   // Derived
   const mcEntryNum = parseMC(mcEntry);
   const mcTargetNum = parseMC(mcTarget);
-  const investRaw = parseFloat(investment) || 0;
+  const investRaw = parseModalInput(investment) || 0;
   const effectiveSolPrice = solPrice ?? 0;
 
   const investmentUSD =
@@ -550,7 +582,9 @@ export default function PnlCalculator() {
               <InputField
                 value={investment}
                 onChange={setInvestment}
-                placeholder={inputMode === "usd" ? "e.g. 2" : "e.g. 0.03"}
+                placeholder={
+                  inputMode === "usd" ? "e.g. 2 · 2.33K · 1.5M" : "e.g. 0.03 · 1.5K"
+                }
                 prefix={inputMode === "usd" ? "$" : "◎"}
               />
 
