@@ -1,5 +1,8 @@
 import React, { useState, useCallback, useEffect, type ChangeEvent } from "react";
 
+/** Asset di `public/SOL.svg` — URL root Next.js */
+const SOL_ICON = "/SOL.svg";
+
 // ─── Utility ────────────────────────────────────────────────────────────────
 function formatUSD(val: number) {
   if (Math.abs(val) >= 1_000_000) return `$${(val / 1_000_000).toFixed(2)}M`;
@@ -66,9 +69,9 @@ function StatBox({
   sub,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   accent?: "green" | "red" | "blue" | "yellow" | "default";
-  sub?: string;
+  sub?: React.ReactNode;
 }) {
   const colorMap: Record<string, string> = {
     green: "text-[#4ade80]",
@@ -117,7 +120,16 @@ function SimRow({
     <div className="flex items-center justify-between py-1.5 border-b border-[#111a24] last:border-0">
       <span className="text-[11px] font-mono text-[#4a6a8a] w-12">{label}</span>
       <span className={`text-[11px] font-mono w-16 text-right ${isNeg ? "text-[#f87171]" : "text-[#e2e8f0]"}`}>{formatUSD(resultUSD)}</span>
-      <span className={`text-[11px] font-mono w-20 text-right ${isNeg ? "text-[#f87171]" : "text-[#a78bfa]"}`}>{formatSOL(resultSOL)}</span>
+      <span
+        className={`text-[11px] font-mono w-20 text-right inline-flex items-center justify-end gap-0.5 ${isNeg ? "text-[#f87171]" : "text-[#a78bfa]"}`}
+      >
+        <img
+          src={SOL_ICON}
+          className="w-2.5 h-2.5 rounded-full object-cover ring-1 ring-[#1e2d3d] flex-shrink-0"
+          alt=""
+        />
+        <span>{formatSOL(resultSOL).replace(/^◎/, "")}</span>
+      </span>
       <span className={`text-[11px] font-mono w-14 text-right ${isZero ? "text-[#5a6a7a]" : isNeg ? "text-[#f87171]" : "text-[#4ade80]"}`}>
         {isZero ? "0%" : isNeg ? `${pct}%` : `+${pct}%`}
       </span>
@@ -157,7 +169,11 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
       {/* header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#1e2d3d] bg-[#080e14]">
         <div className="flex items-center gap-2">
-          <img src="https://plisio.net/img/psys-icon/SOL.svg" className="w-3 h-3" alt="SOL" />
+          <img
+            src={SOL_ICON}
+            className="w-3 h-3 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+            alt="SOL"
+          />
           <span className="text-[10px] font-mono text-[#a78bfa] tracking-widest uppercase">
             SOL / USD Converter
           </span>
@@ -178,7 +194,11 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
           <div className="flex-1 bg-[#0a0f16] border border-[#1e2d3d] rounded-lg px-3 py-3 focus-within:border-[#a78bfa] transition-colors">
             <p className="text-[9px] font-mono text-[#3a5a7a] mb-1 uppercase tracking-widest">SOL</p>
             <div className="flex items-center gap-2">
-              <img src="https://plisio.net/img/psys-icon/SOL.svg" className="w-4 h-4 flex-shrink-0" alt="" />
+              <img
+                src={SOL_ICON}
+                className="w-4 h-4 flex-shrink-0 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+                alt=""
+              />
               <input
                 type="number"
                 min="0"
@@ -381,7 +401,12 @@ export default function PnlCalculator() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />
+            <div
+              className="h-6 w-6 shrink-0 rounded-full bg-cover bg-center ring-1 ring-[#1e2d3d] ring-offset-2 ring-offset-[#060b10]"
+              style={{ backgroundImage: `url("${SOL_ICON}")` }}
+              role="img"
+              aria-label="SOL"
+            />
             <span className="text-[10px] font-mono text-[#4ade80] tracking-widest uppercase">
               PnL Calculator
             </span>
@@ -397,8 +422,8 @@ export default function PnlCalculator() {
               }`}
             >
               <img
-                src="https://plisio.net/img/psys-icon/SOL.svg"
-                className="w-3 h-3"
+                src={SOL_ICON}
+                className="w-3 h-3 rounded-full object-cover ring-1 ring-[#1e2d3d]"
                 alt="SOL"
               />
               {solLoading ? (
@@ -431,7 +456,7 @@ export default function PnlCalculator() {
             </p>
           ) : lastUpdated ? (
             <p className="text-[9px] font-mono text-[#2a3a4a]">
-              via plisio · updated {lastUpdated}
+              harga SOL · updated {lastUpdated}
             </p>
           ) : (
             <span />
@@ -512,7 +537,11 @@ export default function PnlCalculator() {
                         : "text-[#3a4a5a] hover:text-[#a78bfa]"
                     }`}
                   >
-                    <img src="https://plisio.net/img/psys-icon/SOL.svg" className="w-2.5 h-2.5" alt="" />
+                    <img
+                      src={SOL_ICON}
+                      className="w-2.5 h-2.5 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+                      alt=""
+                    />
                     SOL
                   </button>
                 </div>
@@ -557,19 +586,49 @@ export default function PnlCalculator() {
                         : formatUSD(profitUSD)
                     }
                     accent={pnlState === "zero" ? "default" : pnlState === "positive" ? "green" : "red"}
-                    sub={`modal ${formatUSD(investmentUSD)}`}
+                    sub={
+                      <span className="inline-flex items-center gap-1 flex-wrap">
+                        <span>modal</span>
+                        <img
+                          src={SOL_ICON}
+                          className="w-3 h-3 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+                          alt=""
+                        />
+                        <span>{formatUSD(investmentUSD)}</span>
+                      </span>
+                    }
                   />
                   <StatBox
                     label="Hasil SOL"
                     value={
-                      pnlState === "zero"
-                        ? "◎0.000000"
-                        : pnlState === "positive"
-                        ? `+${formatSOL(profitSOL)}`
-                        : formatSOL(profitSOL)
+                      pnlState === "zero" ? (
+                        "◎0.000000"
+                      ) : pnlState === "positive" ? (
+                        <span className="inline-flex items-center gap-0.5">
+                          +
+                          <img
+                            src={SOL_ICON}
+                            className="w-3.5 h-3.5 rounded-full object-cover ring-1 ring-[#334155]"
+                            alt=""
+                          />
+                          <span>{formatSOL(profitSOL).replace(/^◎/, "")}</span>
+                        </span>
+                      ) : (
+                        formatSOL(profitSOL)
+                      )
                     }
                     accent={pnlState === "zero" ? "default" : pnlState === "positive" ? "yellow" : "red"}
-                    sub={`modal ${formatSOL(investmentSOL)}`}
+                    sub={
+                      <span className="inline-flex items-center gap-1 flex-wrap">
+                        <span>modal</span>
+                        <img
+                          src={SOL_ICON}
+                          className="w-3 h-3 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+                          alt=""
+                        />
+                        <span>{formatSOL(investmentSOL)}</span>
+                      </span>
+                    }
                   />
                   <StatBox
                     label="PnL %"
@@ -588,20 +647,38 @@ export default function PnlCalculator() {
                 {/* Simulation table */}
                 <div className="bg-[#080e14] border border-[#1e2d3d] rounded p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-[#5a6a7a]">
-                      Simulasi Modal{" "}
-                      {inputMode === "usd"
-                        ? formatUSD(investmentUSD)
-                        : formatSOL(investmentSOL)}
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-[#5a6a7a] inline-flex items-center gap-1.5 flex-wrap">
+                      <span>Simulasi Modal</span>
+                      {inputMode === "usd" ? (
+                        <span>{formatUSD(investmentUSD)}</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 normal-case">
+                          <img
+                            src={SOL_ICON}
+                            className="w-3 h-3 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+                            alt=""
+                          />
+                          <span className="text-[#a78bfa] tracking-normal">
+                            {formatSOL(investmentSOL).replace(/^◎/, "")}
+                          </span>
+                        </span>
+                      )}
                     </p>
                     <span className="text-[10px] font-mono text-[#3a4a5a]">
                       supply tetap
                     </span>
                   </div>
-                  <div className="flex text-[9px] font-mono text-[#3a4a5a] pb-1 border-b border-[#111a24] mb-1">
+                  <div className="flex text-[9px] font-mono text-[#3a4a5a] pb-1 border-b border-[#111a24] mb-1 items-center">
                     <span className="w-12">MC ×</span>
                     <span className="w-16 text-right">USD</span>
-                    <span className="flex-1 text-right">SOL</span>
+                    <span className="flex-1 text-right inline-flex items-center justify-end gap-0.5">
+                      <img
+                        src={SOL_ICON}
+                        className="w-2 h-2 rounded-full object-cover ring-1 ring-[#1e2d3d] opacity-70"
+                        alt=""
+                      />
+                      SOL
+                    </span>
                     <span className="w-14 text-right">%</span>
                   </div>
                   {simTargets.map((mx) => (

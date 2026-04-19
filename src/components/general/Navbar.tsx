@@ -51,8 +51,15 @@ export default function Navbar() {
           <Button
             onClick={() => router.push("/")}
             variant="ghost"
-            className="font-semibold text-lg hover:opacity-80 transition-opacity mr-4"
+            className="font-semibold text-lg hover:opacity-80 transition-opacity mr-4 flex items-center gap-2 px-2"
           >
+            <img
+              src="/SOL.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-full object-cover ring-1 ring-border"
+            />
             Zacode
           </Button>
         </div>
