@@ -153,6 +153,7 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
   const [solVal, setSolVal] = useState("1");
   const [usdVal, setUsdVal] = useState("");
   const [lastEdited, setLastEdited] = useState<"sol" | "usd">("sol");
+  const [isSwapped, setIsSwapped] = useState(false);
 
   const derivedUsdFromSol = useMemo(() => {
     if (solPrice <= 0 || !solVal) return "";
@@ -179,14 +180,49 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
   };
 
   const swap = () => {
-    if (lastEdited === "sol") {
-      setUsdVal(derivedUsdFromSol);
-      setLastEdited("usd");
-    } else {
-      setSolVal(derivedSolFromUsd);
-      setLastEdited("sol");
-    }
+    setIsSwapped((s) => !s);
+    if (lastEdited === "sol") setUsdVal(derivedUsdFromSol);
+    else setSolVal(derivedSolFromUsd);
+    setLastEdited((v) => (v === "sol" ? "usd" : "sol"));
   };
+
+  const InputSol = (
+    <div className="flex-1 bg-[#0a0f16] border border-[#1e2d3d] rounded-lg px-3 py-3 focus-within:border-[#a78bfa] transition-colors">
+      <p className="text-[9px] font-mono text-[#3a5a7a] mb-1 uppercase tracking-widest">SOL</p>
+      <div className="flex items-center gap-2">
+        <img
+          src={SOL_ICON}
+          className="w-4 h-4 shrink-0 rounded-full object-cover ring-1 ring-[#1e2d3d]"
+          alt=""
+        />
+        <input
+          type="number"
+          min="0"
+          value={displaySol}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleSol(e.target.value)}
+          placeholder="0"
+          className="w-full bg-transparent font-mono text-base text-[#e2e8f0] placeholder-[#2a3a4a] focus:outline-none"
+        />
+      </div>
+    </div>
+  );
+
+  const InputUsd = (
+    <div className="flex-1 bg-[#0a0f16] border border-[#1e2d3d] rounded-lg px-3 py-3 focus-within:border-[#4ade80] transition-colors">
+      <p className="text-[9px] font-mono text-[#3a5a7a] mb-1 uppercase tracking-widest">USD</p>
+      <div className="flex items-center gap-2">
+        <span className="text-[#4ade80] font-mono text-sm shrink-0">$</span>
+        <input
+          type="number"
+          min="0"
+          value={displayUsd}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handleUsd(e.target.value)}
+          placeholder="0.00"
+          className="w-full bg-transparent font-mono text-base text-[#e2e8f0] placeholder-[#2a3a4a] focus:outline-none"
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="mt-3 bg-[#0d1117] border border-[#1e2d3d] rounded-lg overflow-hidden">
@@ -214,25 +250,7 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
 
       <div className="p-4">
         <div className="flex items-center gap-2">
-          {/* SOL input */}
-          <div className="flex-1 bg-[#0a0f16] border border-[#1e2d3d] rounded-lg px-3 py-3 focus-within:border-[#a78bfa] transition-colors">
-            <p className="text-[9px] font-mono text-[#3a5a7a] mb-1 uppercase tracking-widest">SOL</p>
-            <div className="flex items-center gap-2">
-              <img
-                src={SOL_ICON}
-                className="w-4 h-4 flex-shrink-0 rounded-full object-cover ring-1 ring-[#1e2d3d]"
-                alt=""
-              />
-              <input
-                type="number"
-                min="0"
-                value={displaySol}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => handleSol(e.target.value)}
-                placeholder="0"
-                className="w-full bg-transparent font-mono text-base text-[#e2e8f0] placeholder-[#2a3a4a] focus:outline-none"
-              />
-            </div>
-          </div>
+          {isSwapped ? InputUsd : InputSol}
 
           {/* Swap button */}
           <button
@@ -243,21 +261,7 @@ function SolConverter({ solPrice, solLoading }: { solPrice: number; solLoading: 
             ⇄
           </button>
 
-          {/* USD input */}
-          <div className="flex-1 bg-[#0a0f16] border border-[#1e2d3d] rounded-lg px-3 py-3 focus-within:border-[#4ade80] transition-colors">
-            <p className="text-[9px] font-mono text-[#3a5a7a] mb-1 uppercase tracking-widest">USD</p>
-            <div className="flex items-center gap-2">
-              <span className="text-[#4ade80] font-mono text-sm flex-shrink-0">$</span>
-              <input
-                type="number"
-                min="0"
-                value={displayUsd}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => handleUsd(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-transparent font-mono text-base text-[#e2e8f0] placeholder-[#2a3a4a] focus:outline-none"
-              />
-            </div>
-          </div>
+          {isSwapped ? InputSol : InputUsd}
         </div>
 
         {/* Quick amounts */}
